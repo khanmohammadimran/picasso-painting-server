@@ -16,6 +16,7 @@ async function run() {
     try {
         await client.connect();
         const toolsCollection = client.db('picasso_painting').collection('tools');
+        const mypurchaseCollection = client.db('picasso_painting').collection('mypurchase');
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -47,6 +48,19 @@ async function run() {
 
             res.send(result);
 
+        })
+
+        app.post('/mypurchase', async (req, res) => {
+            const mypurchase = req.body;
+            const result = await mypurchaseCollection.insertOne(mypurchase);
+            res.send(result);
+        })
+
+        app.get('/mypurchase', async (req, res) => {
+            const customer = req.query.customer
+            const query = { customer: customer };
+            const mypurchases = await mypurchaseCollection.find(query).toArray();
+            res.send(mypurchases);
         })
     }
     finally {
