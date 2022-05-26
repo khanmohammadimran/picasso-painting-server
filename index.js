@@ -17,6 +17,7 @@ async function run() {
         await client.connect();
         const toolsCollection = client.db('picasso_painting').collection('tools');
         const mypurchaseCollection = client.db('picasso_painting').collection('mypurchase');
+        const userCollection = client.db('picasso_painting').collection('users');
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -24,6 +25,18 @@ async function run() {
             const tools = await cursor.toArray();
             res.send(tools);
         });
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body
+            const filter = { email: email };
+            const option = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, option);
+            res.send(result);
+        })
 
         app.get('/tools/:id', async (req, res) => {
             const id = req.params.id;
