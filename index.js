@@ -36,6 +36,7 @@ async function run() {
         const toolsCollection = client.db('picasso_painting').collection('tools');
         const mypurchaseCollection = client.db('picasso_painting').collection('mypurchase');
         const userCollection = client.db('picasso_painting').collection('users');
+        const reviewCollection = client.db("reviewUser").collection("review");
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -44,9 +45,42 @@ async function run() {
             res.send(tools);
         });
 
+        app.post("/tools", async (req, res) => {
+            const data = req.body;
+            const result = await toolsCollection.insertOne(data)
+            res.send(result);
+        })
+
+        app.get("/tools", async (req, res) => {
+            const query = {};
+            const cursor = toolsCollection.find(query);
+            const services = await cursor.toArray();
+            res.send(services);
+        });
+
+        app.get("/review", async (req, res) => {
+            const query = {};
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+        app.post("/review", async (req, res) => {
+            const data = req.body;
+            const result = await reviewCollection.insertOne(data);
+            res.send(result);
+        });
+
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
+        });
+
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin })
         })
 
         app.put('/user/:admin/:email', verifyJWT, async (req, res) => {
