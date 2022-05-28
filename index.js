@@ -6,6 +6,7 @@ const app = express()
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jsonwebtoken = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
 app.use(express.json());
@@ -83,6 +84,18 @@ async function run() {
             res.send({ admin: isAdmin })
         })
 
+        app.post('/create-payment-intent', async (req, res) => {
+            const tools = req.body;
+            const price = tools.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card'],
+            })
+            res.send({ clientSecret: paymentIntent.client_secret })
+        })
+
         app.put('/user/:admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const requestor = req.decoded.email
@@ -156,6 +169,13 @@ async function run() {
             else {
                 return res.status(403).send({ message: 'Forbidden access' });
             }
+        })
+
+        app.get('/mypurchase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: (ObjectId(id)) };
+            const mypurchases = await mypurchaseCollection.findOne(query);
+            res.send(mypurchases);
         })
     }
     finally {
